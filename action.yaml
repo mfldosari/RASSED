@@ -156,7 +156,7 @@ runs:
         echo "RESPONSE=$RESPONSE"
         ID=$(echo "$RESPONSE" | jq -r '.scan_id')
         echo "ID=$ID"
-        echo "scan_id=$ID" >> $GITHUB_OUTPUT
+        echo "$ID" > scan_id.txt
     - name: Execute Security Scan (Scan and Exploit)
       shell: bash
       if: ${{ github.event.inputs.action_type == 'scan_and_exploit' }}
@@ -167,8 +167,8 @@ runs:
       id: scan_validation
       shell: bash
       run: |
-        # Get scan_id from previous step (scan_only or scan_and_exploit)
-        SCAN_ID="$ID"
+        # Read scan_id from file
+        SCAN_ID=$(cat scan_id.txt)
         if [ -z "$SCAN_ID" ] || [ "$SCAN_ID" = "null" ]; then
           echo "::error::No scan_id found. Cannot validate scan."
           exit 1
