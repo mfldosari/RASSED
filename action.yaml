@@ -41,13 +41,13 @@ inputs:
     required: true
   git_credentials:
     description: 'Git Credentials'
-    required: true
+    required: false
   git_username:
     description: 'Git Username'
     required: true
   git_password:
     description: 'Git Password'
-    required: true
+    required: false
 outputs:
   result_json:
     description: "The raw scan result JSON from the validation step."
@@ -55,11 +55,18 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Check password or git_credentials provided
+      shell: bash
+      run: |
+        if [ -z "${{ inputs.password }}" ] && [ -z "${{ inputs.git_credentials }}" ]; then
+          echo "::error::You must provide at least one of 'password' or 'git_credentials'."
+          exit 1
+        fi
     - name: Check Required Inputs
       shell: bash
       run: |
         missing=""
-        for var in HOST ACCESS_TOKEN action_type tracker_type server_url username password project_key scanner_name git_url git_branch git_credentials git_username git_password; do
+        for var in HOST ACCESS_TOKEN action_type tracker_type server_url username password project_key scanner_name git_url git_branch git_username; do
           value="${{ inputs.${var} }}"
           if [ -z "$value" ]; then
             echo "::error::Input '$var' is required but not provided."
