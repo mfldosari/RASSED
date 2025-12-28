@@ -14,6 +14,7 @@ inputs:
   mock_mode:
     description: 'Mock Mode (true or false)'
     required: true
+    default: 'false'
   tracker_type:
     description: 'Issue Tracker Type (github or jira)'
     required: true
@@ -54,26 +55,20 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: debug info
-      if: ${{ github.event.inputs.debug_mode == 'true' }}
+    - name: Check Required Inputs
       shell: bash
       run: |
-        echo "Inputs:"
-        echo "HOST=${{ inputs.HOST }}"
-        echo "ACCESS_TOKEN=${{ inputs.ACCESS_TOKEN }}"
-        echo "action_type=${{ inputs.action_type }}"
-        echo "mock_mode=${{ inputs.mock_mode }}"
-        echo "tracker_type=${{ inputs.tracker_type }}"
-        echo "server_url=${{ inputs.server_url }}"
-        echo "username=${{ inputs.username }}"
-        echo "password=****"
-        echo "project_key=${{ inputs.project_key }}"
-        echo "scanner_name=${{ inputs.scanner_name }}"
-        echo "git_url=${{ inputs.git_url }}"
-        echo "git_branch=${{ inputs.git_branch }}"
-        echo "git_credentials=****"
-        echo "git_username=${{ inputs.git_username }}"
-        echo "git_password=****"
+        missing=""
+        for var in HOST ACCESS_TOKEN action_type tracker_type server_url username password project_key scanner_name git_url git_branch git_credentials git_username git_password; do
+          value="${{ inputs.${var} }}"
+          if [ -z "$value" ]; then
+            echo "::error::Input '$var' is required but not provided."
+            missing=1
+          fi
+        done
+        if [ "$missing" ]; then
+          exit 1
+        fi
 
     - name: Validate Issue Tracker Credentials
       shell: bash
