@@ -83,13 +83,13 @@ you can use it in any workflow like this:
                 required: true
               git_credentials:
                 description: 'Git Credentials'
-                required: true
+                required: false
               git_username:
                 description: 'Git Username'
                 required: true
               git_password:
                 description: 'Git Password'
-                required: true
+                required: false
 
         jobs:
           scan:
@@ -141,9 +141,9 @@ you can use it in any workflow like this:
                   scanner_name: "veracode"
                   git_url: "https://github.com/octocat/hello-world.git"
                   git_branch: "main"
-                  git_credentials: "ghp_exampletoken"
-                  git_username: "octocat"
+                  git_credentials: "ghp_exampletoken" #or 
                   git_password: "gitpass123"
+                  git_username: "octocat"
         ```
 
 ## Required Inputs Reference
