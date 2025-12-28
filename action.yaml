@@ -1,0 +1,207 @@
+name: "Dynamic Scan Action"
+description: "Reusable action for validating credentials and running dynamic security scans."
+author: "mfldosari"
+inputs:
+  HOST:
+    description: 'Host IP and Port'
+    required: true
+  ACCESS_TOKEN:
+    description: 'Access Token'
+    required: true
+  action_type:
+    description: 'Action Type (scan_only or scan_and_exploit)'
+    required: true
+  mock_mode:
+    description: 'Mock Mode (true or false)'
+    required: true
+  tracker_type:
+    description: 'Issue Tracker Type (github or jira)'
+    required: true
+  server_url:
+    description: 'Issue Tracker Server URL'
+    required: true
+  username:
+    description: 'Issue Tracker Username'
+    required: true
+  password:
+    description: 'Issue Tracker Password'
+    required: true
+  project_key:
+    description: 'Issue Tracker Project Key'
+    required: true
+  scanner_name:
+    description: 'Scanner Name'
+    required: true
+  git_url:
+    description: 'Git URL'
+    required: true
+  git_branch:
+    description: 'Git Branch'
+    required: true
+  git_credentials:
+    description: 'Git Credentials'
+    required: true
+  git_username:
+    description: 'Git Username'
+    required: true
+  git_password:
+    description: 'Git Password'
+    required: true
+outputs:
+  result_json:
+    description: "The raw scan result JSON from the validation step."
+    value: ${{ steps.scan_validation.outputs.result_json }}
+runs:
+  using: "composite"
+  steps:
+    - name: debug info
+      if: ${{ github.event.inputs.debug_mode == 'true' }}
+      shell: bash
+      run: |
+        echo "Inputs:"
+        echo "HOST=${{ inputs.HOST }}"
+        echo "ACCESS_TOKEN=${{ inputs.ACCESS_TOKEN }}"
+        echo "action_type=${{ inputs.action_type }}"
+        echo "mock_mode=${{ inputs.mock_mode }}"
+        echo "tracker_type=${{ inputs.tracker_type }}"
+        echo "server_url=${{ inputs.server_url }}"
+        echo "username=${{ inputs.username }}"
+        echo "password=****"
+        echo "project_key=${{ inputs.project_key }}"
+        echo "scanner_name=${{ inputs.scanner_name }}"
+        echo "git_url=${{ inputs.git_url }}"
+        echo "git_branch=${{ inputs.git_branch }}"
+        echo "git_credentials=****"
+        echo "git_username=${{ inputs.git_username }}"
+        echo "git_password=****"
+
+    - name: Validate Issue Tracker Credentials
+      shell: bash
+      run: |
+        echo "Validating Issue Tracker Credentials..."
+        if [[ "${{ inputs.tracker_type }}" == "github" ]]; then
+          HTTP_CODE=$(curl -s -u "${{ inputs.username }}:${{ inputs.password }}" -o /dev/null -w "%{http_code}" "https://api.github.com/user")
+          echo "GitHub API HTTP code: $HTTP_CODE"
+          if [[ "$HTTP_CODE" == "200" ]]; then
+            echo "GitHub credentials valid."
+          else
+            echo "::error::GitHub credentials invalid. HTTP code: $HTTP_CODE"
+            exit 1
+          fi
+        elif [[ "${{ inputs.tracker_type }}" == "jira" ]]; then
+          curl -s -u "${{ inputs.username }}:${{ inputs.password }}" \
+            -o /dev/null -w "%{http_code}" "${{ inputs.server_url }}/rest/api/2/myself" | grep -q "200"
+          if [[ $? -eq 0 ]]; then
+            echo "Jira credentials valid."
+          else
+            echo "::error::Jira credentials invalid."
+            exit 1
+          fi
+        else
+          echo "::error::Unknown tracker_type."
+          exit 1
+        fi
+    - name: Validate SVC Credentials
+      shell: bash
+      run: |
+        echo "Validating SVC (Git) Credentials..."
+        GIT_URL="${{ inputs.git_url }}"
+        GIT_URL_NOPROTO=${GIT_URL#https://}
+        git ls-remote --exit-code --heads "https://${{ inputs.git_username }}:${{ inputs.git_password }}@${GIT_URL_NOPROTO}" > /dev/null 2>&1
+        if [[ $? -eq 0 ]]; then
+          echo "SVC credentials valid."
+        else
+          echo "::error::SVC credentials invalid."
+          exit 1
+        fi
+    - name: Execute Security Scan (Scan Only)
+      shell: bash
+      if: ${{ github.event.inputs.action_type == 'scan_only' }}
+      run: |
+        RESPONSE=$( curl -s -k -X POST \
+          -H "Content-Type: application/json" \
+          -H "accept: application/json" \
+          -b "access_token=${{ inputs.ACCESS_TOKEN }}" \
+          "http://${{ inputs.HOST }}/api/v1/orchestrator/execute" \
+          --data-binary @- <<EOF
+        {
+          "action_type": "${{ inputs.action_type }}",
+          "mock_mode": ${{ inputs.mock_mode }},
+          "issue_tracker": {
+              "tracker_type": "${{ inputs.tracker_type }}",
+              "server_url": "${{ inputs.server_url }}",
+              "username": "${{ inputs.username }}",
+              "password": "${{ inputs.password }}",
+              "project_key": "${{ inputs.project_key }}"
+          },
+          "scanner": {
+              "name": "${{ inputs.scanner_name }}",
+              "git_url": "${{ inputs.git_url }}",
+              "git_branch": "${{ inputs.git_branch }}",
+              "git_credentials": "${{ inputs.git_credentials }}",
+              "git_username": "${{ inputs.git_username }}",
+              "git_password": "${{ inputs.git_password }}",
+              "llm_endpoint_url": "http://172.20.30.92:11434/v1",
+              "llm_model_name": "SimonPu/qwen3-coder:30B-Instruct_Q4_K_XL",
+              "llm_api_key": "ollama",
+              "llm_max_context_tokens": 262144,
+              "include_file_extensions": [".java",".jsp",".js",".py"],
+              "exclude_file_dirs": [".git", "node_modules", "venv", "__pycache__", "docs", "target"],
+              "include_vulnerability_types": ["SQL Injection", "Cross-Site Scripting (XSS)", "Insecure Authentication"],
+              "max_vulnerabilities": 10
+          }
+        }
+        EOF
+        )
+        echo "RESPONSE=$RESPONSE"
+        ID=$(echo "$RESPONSE" | jq -r '.scan_id')
+        echo "ID=$ID"
+        echo "scan_id=$ID" >> $GITHUB_OUTPUT
+    - name: Execute Security Scan (Scan and Exploit)
+      shell: bash
+      if: ${{ github.event.inputs.action_type == 'scan_and_exploit' }}
+      run: |
+        echo "Scan and Exploit..."
+
+    - name: Scan Validation & Check Security Thresholds
+      id: scan_validation
+      shell: bash
+      run: |
+        # Get scan_id from previous step (scan_only or scan_and_exploit)
+        SCAN_ID="$ID"
+        if [ -z "$SCAN_ID" ] || [ "$SCAN_ID" = "null" ]; then
+          echo "::error::No scan_id found. Cannot validate scan."
+          exit 1
+        fi
+        URL="http://${{ inputs.HOST }}/api/v1/scans/$SCAN_ID"
+        echo "Starting polling for Scan ID: $SCAN_ID"
+        while true; do
+          RESPONSE=$(curl -s -X 'GET' "$URL" -H 'accept: application/json')
+          CURRENT_STATUS=$(echo "$RESPONSE" | jq -r '.status')
+          echo "Current Status: $CURRENT_STATUS"
+          if [[ "$CURRENT_STATUS" == "completed" || "$CURRENT_STATUS" == "failed" ]]; then
+            break
+          fi
+          echo "Still running... sleeping 2 minutes."
+          sleep 120
+        done
+        if [[ "$CURRENT_STATUS" == "failed" ]]; then
+          echo "::error::Scan system failure. Blocking deployment."
+          exit 1
+        fi
+        RESULT=$(curl -s -X 'GET' "$URL" -H 'accept: application/json')
+        echo "result_json=$RESULT" >> $GITHUB_OUTPUT
+        TOTAL=$(echo "$RESULT" | jq -r '.total_vulnerabilities_found // 0')
+        CRITICAL=$(echo "$RESULT" | jq -r '.critical_count // 0')
+        HIGH=$(echo "$RESULT" | jq -r '.high_count // 0')
+        MEDIUM=$(echo "$RESULT" | jq -r '.medium_count // 0')
+        echo "Analysis: Total: $TOTAL | Critical: $CRITICAL | High: $HIGH | Medium: $MEDIUM"
+        if [ "$TOTAL" -eq 0 ]; then
+          echo "No vulnerabilities found. Deployment allowed."
+        elif [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ] || [ "$MEDIUM" -gt 0 ]; then
+          echo "::error::Security gate failed. Found $CRITICAL Critical, $HIGH High, $MEDIUM Medium."
+          exit 1
+        else
+          echo "Only low-level issues found. Proceeding."
+        fi
+      
