@@ -55,25 +55,66 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Check password or git_credentials provided
+    - name: Check git_password or git_credentials provided
       shell: bash
       run: |
-        if [ -z "${{ inputs.password }}" ] && [ -z "${{ inputs.git_credentials }}" ]; then
-          echo "::error::You must provide at least one of 'password' or 'git_credentials'."
+        if [ -z "${{ inputs.git_password }}" ] && [ -z "${{ inputs.git_credentials }}" ]; then
+          echo "::error::You must provide at least one of 'git_password' or 'git_credentials'."
           exit 1
         fi
     - name: Check Required Inputs
       shell: bash
       run: |
-        missing=""
-        for var in HOST ACCESS_TOKEN action_type tracker_type server_url username password project_key scanner_name git_url git_branch git_username; do
-          value="${{ inputs.${var} }}"
-          if [ -z "$value" ]; then
-            echo "::error::Input '$var' is required but not provided."
-            missing=1
-          fi
-        done
-        if [ "$missing" ]; then
+        missing=0
+        if [ -z "${{ inputs.HOST }}" ]; then
+          echo "::error::Input 'HOST' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.ACCESS_TOKEN }}" ]; then
+          echo "::error::Input 'ACCESS_TOKEN' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.action_type }}" ]; then
+          echo "::error::Input 'action_type' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.tracker_type }}" ]; then
+          echo "::error::Input 'tracker_type' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.server_url }}" ]; then
+          echo "::error::Input 'server_url' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.username }}" ]; then
+          echo "::error::Input 'username' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.password }}" ]; then
+          echo "::error::Input 'password' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.project_key }}" ]; then
+          echo "::error::Input 'project_key' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.scanner_name }}" ]; then
+          echo "::error::Input 'scanner_name' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.git_url }}" ]; then
+          echo "::error::Input 'git_url' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.git_branch }}" ]; then
+          echo "::error::Input 'git_branch' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.git_username }}" ]; then
+          echo "::error::Input 'git_username' is required but not provided."
+          missing=1
+        fi
+        if [ "$missing" -eq 1 ]; then
           exit 1
         fi
 
