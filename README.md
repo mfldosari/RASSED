@@ -20,7 +20,7 @@ you can use it in any workflow like this:
               - name: Checkout code
                 uses: actions/checkout@v4
               - name: Run Dynamic Scan Action
-                uses: <your-username>/<your-repo>@v1.0.0
+                uses: mfldosari/RASSED@v1.0.0
                 with:
                   HOST: ${{ secrets.HOST }}
                   ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
@@ -98,7 +98,7 @@ you can use it in any workflow like this:
               - name: Checkout code
                 uses: actions/checkout@v4
               - name: Run Dynamic Scan Action
-                uses: <your-username>/<your-repo>@v1.0.0
+                uses: mfldosari/RASSED@v1.0.0
                 with:
                   HOST: ${{ github.event.inputs.HOST }}
                   ACCESS_TOKEN: ${{ github.event.inputs.ACCESS_TOKEN }}
@@ -127,7 +127,7 @@ you can use it in any workflow like this:
               - name: Checkout code
                 uses: actions/checkout@v4
               - name: Run Dynamic Scan Action
-                uses: <your-username>/<your-repo>@v1.0.0
+                uses: mfldosari/RASSED@v1.0.0
                 with:
                   HOST: "HOST IP"
                   ACCESS_TOKEN: "exampleaccesstoken123"
@@ -146,29 +146,25 @@ you can use it in any workflow like this:
                   git_password: "gitpass123"
         ```
 
----
+## Required Inputs Reference
 
-## 📋 Required Inputs Reference
+| Input          | Description                                         | Example Value                        |
+|---------------|-----------------------------------------------------|--------------------------------------|
+| HOST          | Host IP and Port                                    | 172.20.31.135:30899                  |
+| ACCESS_TOKEN  | Access Token for orchestrator API                   | exampleaccesstoken123                |
+| action_type   | Action Type (scan_only or scan_and_exploit)         | scan_only                            |
+| mock_mode     | Mock Mode (true or false)                           | false                                |
+| tracker_type  | Issue Tracker Type (github or jira)                 | github                               |
+| server_url    | Issue Tracker Server URL                            | https://github.com                   |
+| username      | Issue Tracker Username                              | octocat                              |
+| password      | Issue Tracker Password                              | hunter2                              |
+| project_key   | Issue Tracker Project Key (github: <owner>/<repo>)  | octocat/hello-world                  |
+| scanner_name  | Scanner Name                                        | veracode                             |
+| git_url       | Git repository URL                                  | https://github.com/octocat/hello-world.git |
+| git_branch    | Git Branch                                          | main                                 |
+| git_credentials| Git Credentials (token/password)                    | ghp_exampletoken                     |
+| git_username  | Git Username                                        | octocat                              |
+| git_password  | Git Password                                        | gitpass123                           |
 
-Below are all the required inputs for this action, with descriptions and example values:
-
-| **Input Name**   | **Description**                                            | **Example Value**                              |
-|------------------|-----------------------------------------------------------|------------------------------------------------|
-| `HOST`           | Host IP and Port for orchestrator API                     | `172.20.31.135:30899`                          |
-| `ACCESS_TOKEN`   | Access Token for orchestrator API                         | `exampleaccesstoken123`                        |
-| `action_type`    | Action Type: `scan_only` or `scan_and_exploit`            | `scan_only`                                    |
-| `mock_mode`      | Mock Mode: `true` or `false`                              | `false`                                        |
-| `tracker_type`   | Issue Tracker Type: `github` or `jira`                    | `github`                                       |
-| `server_url`     | Issue Tracker Server URL                                  | `https://github.com`                            |
-| `username`       | Issue Tracker Username                                    | `octocat`                                       |
-| `password`       | Issue Tracker Password                                    | `hunter2`                                       |
-| `project_key`    | Issue Tracker Project Key (GitHub: `<owner>/<repo>`)      | `octocat/hello-world`                           |
-| `scanner_name`   | Scanner Name                                              | `veracode`                                      |
-| `git_url`        | Git repository URL                                        | `https://github.com/octocat/hello-world.git`    |
-| `git_branch`     | Git Branch                                                | `main`                                          |
-| `git_credentials`| Git Credentials (token/password)                          | `ghp_exampletoken`                              |
-| `git_username`   | Git Username                                              | `octocat`                                       |
-| `git_password`   | Git Password                                              | `gitpass123`                                    |
-
-> **Tip:** For `project_key` with GitHub, use the format `<owner>/<repo>`, e.g., `octocat/hello-world`.
+> **Note:** For `project_key` with GitHub, use the format `<owner>/<repo>`, e.g., `octocat/hello-world`.
 > All inputs are required and must be provided for the action to work correctly.
