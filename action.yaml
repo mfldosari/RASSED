@@ -2,9 +2,11 @@ name: "Dynamic Scan Action"
 description: "Reusable action for validating credentials and running dynamic security scans."
 author: "mfldosari"
 inputs:
+  # General inputs 
+  # STARTING FROM HERE =>
   HOST:
     description: 'Host IP and Port'
-    required: true
+    required: true 
   ACCESS_TOKEN:
     description: 'Access Token'
     required: true
@@ -38,7 +40,7 @@ inputs:
     required: true
   git_branch:
     description: 'Git Branch'
-    required: true
+    required: false
   git_credentials:
     description: 'Git Credentials'
     required: false
@@ -48,10 +50,55 @@ inputs:
   git_password:
     description: 'Git Password'
     required: false
-outputs:
-  result_json:
-    description: "The raw scan result JSON from the validation step."
-    value: ${{ steps.scan_validation.outputs.result_json }}
+  # ENDING HERE
+  
+  # LLM specific inputs
+  # STARTING FROM HERE =>
+  llm_endpoint_url:
+    description: 'LLM Endpoint URL'
+    required: false
+
+  llm_model_name:
+    description: 'LLM Model Name'
+    required: false
+ 
+  llm_api_key:
+    description: 'LLM API Key'
+    required: false
+  
+  llm_max_context_tokens:
+    description: 'LLM Max Context Tokens'
+    required: false
+  # ENDING HERE
+
+  # If scan_and_exploit selected, these inputs are required
+  # Exploiter specific inputs
+  # STARTING FROM HERE =>
+  exploiter_llm_api_key:
+    description: 'Exploiter LLM API Key'
+    required: true
+
+  exploiter_llm_endpoint_url:
+    description: 'Exploiter LLM Endpoint URL'
+    required: true
+
+  exploiter_llm_max_context_tokens:
+    description: 'Exploiter LLM Max Context Tokens'
+    required: true
+
+  exploiter_llm_model_name:
+    description: 'Exploiter LLM Model Name'
+    required: true
+
+  exploiter_target_url:
+    description: 'Target URL for Exploitation'
+    required: true
+
+  exploiter_max_attempts:
+    description: 'Max Attempts for Exploitation'
+    required: true
+  # ENDING HERE
+
 runs:
   using: "composite"
   steps:
@@ -62,7 +109,8 @@ runs:
           echo "::error::You must provide at least one of 'git_password' or 'git_credentials'."
           exit 1
         fi
-    - name: Check Required Inputs
+    - name: Check Required Inputs (scan_only)
+      if: ${{ github.event.inputs.action_type == 'scan_only' || github.event.inputs.action_type == 'scan_and_exploit' }}
       shell: bash
       run: |
         missing=0
@@ -114,12 +162,63 @@ runs:
           echo "::error::Input 'git_username' is required but not provided."
           missing=1
         fi
+        if [ -z "${{ inputs.llm_endpoint_url }}" ]; then
+          echo "::error::Input 'llm_endpoint_url' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.llm_model_name }}" ]; then
+          echo "::error::Input 'llm_model_name' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.llm_api_key }}" ]; then
+          echo "::error::Input 'llm_api_key' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.llm_max_context_tokens }}" ]; then
+          echo "::error::Input 'llm_max_context_tokens' is required but not provided."
+          missing=1
+        fi
+        if [ "$missing" -eq 1 ]; then
+          exit 1
+        fi
+      
+    - name: Check Required Inputs (scan_and_exploit)
+      if: ${{ github.event.inputs.action_type == 'scan_and_exploit' }}
+      shell: bash
+      run: |
+        missing=0
+        # Check exploiter specific required inputs
+        if [ -z "${{ inputs.exploiter_llm_api_key }}" ]; then
+          echo "::error::Input 'exploiter_llm_api_key' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.exploiter_llm_endpoint_url }}" ]; then
+          echo "::error::Input 'exploiter_llm_endpoint_url' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.exploiter_llm_max_context_tokens }}" ]; then
+          echo "::error::Input 'exploiter_llm_max_context_tokens' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.exploiter_llm_model_name }}" ]; then
+          echo "::error::Input 'exploiter_llm_model_name' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.exploiter_target_url }}" ]; then
+          echo "::error::Input 'exploiter_target_url' is required but not provided."
+          missing=1
+        fi
+        if [ -z "${{ inputs.exploiter_max_attempts }}" ]; then
+          echo "::error::Input 'exploiter_max_attempts' is required but not provided."
+          missing=1
+        fi
         if [ "$missing" -eq 1 ]; then
           exit 1
         fi
 
     - name: Validate Issue Tracker Credentials
       shell: bash
+      if: ${{ github.event.inputs.action_type == 'scan_only' || github.event.inputs.action_type == 'scan_and_exploit' }}
       run: |
         echo "Validating Issue Tracker Credentials..."
         if [[ "${{ inputs.tracker_type }}" == "github" ]]; then
@@ -145,6 +244,7 @@ runs:
           exit 1
         fi
     - name: Validate SVC Credentials
+      if: ${{ github.event.inputs.action_type == 'scan_only' || github.event.inputs.action_type == 'scan_and_exploit' }}
       shell: bash
       run: |
         echo "Validating SVC (Git) Credentials..."
@@ -200,13 +300,61 @@ runs:
         ID=$(echo "$RESPONSE" | jq -r '.scan_id')
         echo "ID=$ID"
         echo "$ID" > scan_id.txt
+
     - name: Execute Security Scan (Scan and Exploit)
       shell: bash
       if: ${{ github.event.inputs.action_type == 'scan_and_exploit' }}
       run: |
-        echo "Scan and Exploit..."
+        RESPONSE=$( curl -s -k -X POST \
+          -H "Content-Type: application/json" \
+          -H "accept: application/json" \
+          -b "access_token=${{ inputs.ACCESS_TOKEN }}" \
+          "http://${{ inputs.HOST }}/api/v1/orchestrator/execute" \
+          --data-binary @- <<EOF
+        {
+          "action_type": "${{ inputs.action_type }}",
+          "mock_mode": ${{ inputs.mock_mode }},
+          "issue_tracker": {
+              "tracker_type": "${{ inputs.tracker_type }}",
+              "server_url": "${{ inputs.server_url }}",
+              "username": "${{ inputs.username }}",
+              "password": "${{ inputs.password }}",
+              "project_key": "${{ inputs.project_key }}"
+          },
+          "scanner": {
+              "name": "${{ inputs.scanner_name }}",
+              "git_url": "${{ inputs.git_url }}",
+              "git_branch": "${{ inputs.git_branch }}",
+              "git_credentials": "${{ inputs.git_credentials }}",
+              "git_username": "${{ inputs.git_username }}",
+              "git_password": "${{ inputs.git_password }}",
+              "llm_endpoint_url": "${{ inputs.llm_endpoint_url }}",
+              "llm_model_name": "${{ inputs.llm_model_name }}",
+              "llm_api_key": "${{ inputs.llm_api_key }}",
+              "llm_max_context_tokens": ${{ inputs.llm_max_context_tokens }},
+              "include_file_extensions": [".java",".jsp",".js",".py"],
+              "exclude_file_dirs": [".git", "node_modules", "venv", "__pycache__", "docs", "target"],
+              "include_vulnerability_types": ["SQL Injection", "Cross-Site Scripting (XSS)", "Insecure Authentication"],
+              "max_vulnerabilities": 10
+          },
+          "exploiter": {
+              "exploiter_llm_api_key": "${{ inputs.exploiter_llm_api_key }}",
+              "exploiter_llm_endpoint_url": "${{ inputs.exploiter_llm_endpoint_url }}",
+              "exploiter_llm_max_context_tokens": ${{ inputs.exploiter_llm_max_context_tokens }},
+              "exploiter_llm_model_name": "${{ inputs.exploiter_llm_model_name }}",
+              "max_attempts": ${{ inputs.exploiter_max_attempts }},
+              "target_url": "${{ inputs.exploiter_target_url }}"
+          }
+        }
+        EOF
+        )
+        echo "RESPONSE=$RESPONSE"
+        ID=$(echo "$RESPONSE" | jq -r '.scan_id')
+        echo "ID=$ID"
+        echo "$ID" > scan_id.txt
 
     - name: Scan Validation & Check Security Thresholds
+      if: ${{ github.event.inputs.action_type == 'scan_only' || github.event.inputs.action_type == 'scan_and_exploit' }}
       id: scan_validation
       shell: bash
       run: |
