@@ -5,6 +5,7 @@ Reusable GitHub Action for validating credentials and running dynamic security s
 
 ## Usage
 
+
 you can use it in any workflow like this:
 
 ```yaml
@@ -168,5 +169,5 @@ you can use it in any workflow like this:
 
 > **Note:** For `project_key` with GitHub, use the format `<owner>/<repo>`, e.g., `octocat/hello-world`.
 > All inputs are required and must be provided for the action to work correctly.
-> You can pass in `password`, `git_credentials`, or both, depending on your authentication needs.
+> You can pass in `git_password`, `git_credentials`, or both.
 > You can combine secrets and variables to make static values
