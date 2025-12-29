@@ -5,6 +5,7 @@ Reusable GitHub Action for validating credentials and running dynamic security s
 
 ## Usage
 
+
 you can use it in any workflow like this:
 
 ```yaml
