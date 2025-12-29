@@ -106,7 +106,7 @@ runs:
       shell: bash
       run: |
         if [ -z "${{ inputs.git_password }}" ] && [ -z "${{ inputs.git_credentials }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] You must provide at least one of 'git_password' or 'git_credentials'."
+          echo "::error::You must provide at least one of 'git_password' or 'git_credentials'."
           exit 1
         fi
     - name: Check Required Inputs (scan_only)
@@ -115,67 +115,67 @@ runs:
       run: |
         missing=0
         if [ -z "${{ inputs.HOST }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'HOST' is required but not provided."
+          echo "::error::Input 'HOST' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.ACCESS_TOKEN }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'ACCESS_TOKEN' is required but not provided."
+          echo "::error::Input 'ACCESS_TOKEN' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.action_type }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'action_type' is required but not provided."
+          echo "::error::Input 'action_type' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.tracker_type }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'tracker_type' is required but not provided."
+          echo "::error::Input 'tracker_type' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.server_url }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'server_url' is required but not provided."
+          echo "::error::Input 'server_url' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.username }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'username' is required but not provided."
+          echo "::error::Input 'username' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.password }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'password' is required but not provided."
+          echo "::error::Input 'password' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.project_key }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'project_key' is required but not provided."
+          echo "::error::Input 'project_key' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.scanner_name }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'scanner_name' is required but not provided."
+          echo "::error::Input 'scanner_name' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.git_url }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'git_url' is required but not provided."
+          echo "::error::Input 'git_url' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.git_branch }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'git_branch' is required but not provided."
+          echo "::error::Input 'git_branch' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.git_username }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'git_username' is required but not provided."
+          echo "::error::Input 'git_username' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.llm_endpoint_url }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'llm_endpoint_url' is required but not provided."
+          echo "::error::Input 'llm_endpoint_url' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.llm_model_name }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'llm_model_name' is required but not provided."
+          echo "::error::Input 'llm_model_name' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.llm_api_key }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'llm_api_key' is required but not provided."
+          echo "::error::Input 'llm_api_key' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.llm_max_context_tokens }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'llm_max_context_tokens' is required but not provided."
+          echo "::error::Input 'llm_max_context_tokens' is required but not provided."
           missing=1
         fi
         if [ "$missing" -eq 1 ]; then
@@ -189,27 +189,27 @@ runs:
         missing=0
         # Check exploiter specific required inputs
         if [ -z "${{ inputs.exploiter_llm_api_key }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'exploiter_llm_api_key' is required but not provided."
+          echo "::error::Input 'exploiter_llm_api_key' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.exploiter_llm_endpoint_url }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'exploiter_llm_endpoint_url' is required but not provided."
+          echo "::error::Input 'exploiter_llm_endpoint_url' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.exploiter_llm_max_context_tokens }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'exploiter_llm_max_context_tokens' is required but not provided."
+          echo "::error::Input 'exploiter_llm_max_context_tokens' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.exploiter_llm_model_name }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'exploiter_llm_model_name' is required but not provided."
+          echo "::error::Input 'exploiter_llm_model_name' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.exploiter_target_url }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'exploiter_target_url' is required but not provided."
+          echo "::error::Input 'exploiter_target_url' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.exploiter_max_attempts }}" ]; then
-          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'exploiter_max_attempts' is required but not provided."
+          echo "::error::Input 'exploiter_max_attempts' is required but not provided."
           missing=1
         fi
         if [ "$missing" -eq 1 ]; then
