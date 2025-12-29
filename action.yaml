@@ -205,11 +205,11 @@ runs:
           missing=1
         fi
         if [ -z "${{ inputs.exploiter_target_url }}" ]; then
-          echo "::error::Input 'exploiter_target_url' is required but not provided."
+          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'exploiter_target_url' is required but not provided."
           missing=1
         fi
         if [ -z "${{ inputs.exploiter_max_attempts }}" ]; then
-          echo "::error::Input 'exploiter_max_attempts' is required but not provided."
+          echo "::error::[SCAN TYPE: ${{ inputs.action_type }}] Input 'exploiter_max_attempts' is required but not provided."
           missing=1
         fi
         if [ "$missing" -eq 1 ]; then
