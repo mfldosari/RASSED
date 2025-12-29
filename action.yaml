@@ -109,20 +109,7 @@ runs:
           echo "::error::You must provide at least one of 'git_password' or 'git_credentials'."
           exit 1
         fi
-    - name: Check target url connection (scan_and_exploit)
-      if: ${{ github.event.inputs.action_type == 'scan_and_exploit' }}
-      shell: bash
-      run: |
-        TARGET_URL="${{ inputs.exploiter_target_url }}"
-        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$TARGET_URL")
-        echo "Target URL HTTP code: $HTTP_CODE"
-        if [[ "$HTTP_CODE" == "200"]]; then
-          echo "Target URL is reachable."
-        else
-          echo "::error::Target URL is not reachable. HTTP code: $HTTP_CODE"
-          exit 1
-        fi
-        
+
     - name: Check Required Inputs (scan_only)
       if: ${{ github.event.inputs.action_type == 'scan_only' || github.event.inputs.action_type == 'scan_and_exploit' }}
       shell: bash
@@ -269,6 +256,20 @@ runs:
           echo "SVC credentials valid."
         else
           echo "::error::SVC credentials invalid."
+          exit 1
+        fi
+        
+    - name: Check target url connection (scan_and_exploit)
+      if: ${{ github.event.inputs.action_type == 'scan_and_exploit' }}
+      shell: bash
+      run: |
+        TARGET_URL="${{ inputs.exploiter_target_url }}"
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$TARGET_URL")
+        echo "Target URL HTTP code: $HTTP_CODE"
+        if [[ "$HTTP_CODE" == "200"]]; then
+          echo "Target URL is reachable."
+        else
+          echo "::error::Target URL is not reachable. HTTP code: $HTTP_CODE"
           exit 1
         fi
     - name: Execute Security Scan (Scan Only)
