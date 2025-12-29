@@ -1,7 +1,7 @@
 # RASSED
 # Dynamic Scan Action
 
-Reusable GitHub Action for validating credentials and running dynamic security scans via an orchestrator API.
+Reusable GitHub Action for validating credentials and running RASSED security scan.
 
 ## Usage
 
