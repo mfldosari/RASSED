@@ -266,7 +266,7 @@ runs:
         TARGET_URL="${{ inputs.exploiter_target_url }}"
         HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$TARGET_URL")
         echo "Target URL HTTP code: $HTTP_CODE"
-        if [[ "$HTTP_CODE" == "200"]]; then
+        if [[ "$HTTP_CODE" == "200" ]]; then
           echo "Target URL is reachable."
         else
           echo "::error::Target URL is not reachable. HTTP code: $HTTP_CODE"
